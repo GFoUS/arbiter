@@ -1,0 +1,38 @@
+#include "aether.h"
+#include "layers/layers.h"
+#include "renderer.h"
+
+static bool shouldClose = false;
+
+void onWindowClose(void* data) {
+    shouldClose = true;
+}
+
+int main() {
+    aether_init();
+    layers_init();
+    INFO("Initialised layers");
+
+    event_listener listener;
+    CLEAR_MEMORY(&listener);
+    listener.windowClose = onWindowClose;
+    event_bus_listen(*(event_listener_generic*)&listener);
+
+    window_config windowConfig;
+    windowConfig.isFullscreen = true;
+    windowConfig.title = "ARBITER";
+    window_window* window = window_create(&windowConfig);
+
+    renderer_renderer* renderer = renderer_create(window);
+
+    while (!shouldClose) {
+        renderer_render(renderer);
+        window_poll(window);
+    }
+
+    renderer_destroy(renderer);
+    window_destroy(window);
+    layers_deinit();
+    aether_deinit();
+    return 0;
+}
