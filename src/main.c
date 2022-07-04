@@ -18,8 +18,12 @@ int main() {
     listener.windowClose = onWindowClose;
     event_bus_listen(*(event_listener_generic*)&listener);
 
+    i32 width, height;
+    glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &width, &height);
     window_config windowConfig;
-    windowConfig.isFullscreen = true;
+    CLEAR_MEMORY(&windowConfig);
+    windowConfig.width = width;
+    windowConfig.height = height;
     windowConfig.title = "ARBITER";
     window_window* window = window_create(&windowConfig);
 
