@@ -7,6 +7,8 @@
 
 #include "ui/editor.h"
 
+#include "graphics/model.h"
+
 #define CIMGUI_USE_GLFW
 #define CIMGUI_USE_VULKAN
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -26,6 +28,7 @@ typedef struct {
     VkFence inFlight;
 
     vulkan_image* sceneImageMS;
+    vulkan_image* depthImageMS;
     u32 numFramebuffers;
     vulkan_framebuffer** imguiFramebuffers;
     vulkan_framebuffer* renderFramebuffer;
@@ -33,6 +36,14 @@ typedef struct {
     VkDescriptorPool imguiDescriptorPool;
 
     ui_editor* editor;
+    model_model* model;
+
+    vulkan_descriptor_set_layout* vpLayout;
+    vulkan_descriptor_allocator* vpAllocator;
+    vulkan_descriptor_set* vpSet;
+    vulkan_buffer* vpBuffer;
+
+    vulkan_descriptor_set_layout* materialSetLayout;
 } renderer_renderer;
 
 renderer_renderer* renderer_create(window_window* window);

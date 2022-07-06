@@ -1,8 +1,15 @@
 #include "renderer.h"
 
 #include "cimgui_impl.h"
+#include "cglm/cglm.h"
 
 typedef struct ImGui_ImplVulkan_InitInfo ImGui_ImplVulkan_InitInfo;
+
+typedef struct {
+    mat4 view;
+    mat4 proj;
+    vec3 cameraPosition;
+} frame_data;
 
 void renderer_init_imgui(renderer_renderer* renderer) {
     igCreateContext(0);
@@ -77,6 +84,7 @@ void renderer_recreate_swapchain(renderer_renderer* renderer) {
 
     renderer->numFramebuffers = renderer->swapchain->numImages;
     renderer->imguiFramebuffers = malloc(sizeof(vulkan_framebuffer*) * renderer->numFramebuffers);
+    CLEAR_MEMORY_ARRAY(renderer->imguiFramebuffers, renderer->numFramebuffers);
 
     CLEAR_MEMORY_ARRAY(renderer->imguiFramebuffers, renderer->numFramebuffers);
     for (u32 i = 0; i < renderer->numFramebuffers; i++) {
@@ -84,15 +92,33 @@ void renderer_recreate_swapchain(renderer_renderer* renderer) {
     }
 }
 
+void renderer_create_descriptors(renderer_renderer* renderer) {
+    vulkan_descriptor_set_layout_builder* vpLayoutBuilder = vulkan_descriptor_set_layout_builder_create();
+    vulkan_descriptor_set_layout_builder_add(vpLayoutBuilder, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    renderer->vpLayout = vulkan_descriptor_set_layout_builder_build(vpLayoutBuilder, renderer->ctx->device);
+    renderer->vpAllocator = vulkan_descriptor_allocator_create(renderer->ctx->device, renderer->vpLayout);
+    renderer->vpSet = vulkan_descriptor_set_allocate(renderer->vpAllocator);
+    renderer->vpBuffer = vulkan_buffer_create(renderer->ctx, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(frame_data));
+    vulkan_descriptor_set_write_buffer(renderer->vpSet, 0, renderer->vpBuffer);
+
+    vulkan_descriptor_set_layout_builder* materialSetLayoutBuilder = vulkan_descriptor_set_layout_builder_create();
+    vulkan_descriptor_set_layout_builder_add(materialSetLayoutBuilder, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
+    vulkan_descriptor_set_layout_builder_add(materialSetLayoutBuilder, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+    renderer->materialSetLayout = vulkan_descriptor_set_layout_builder_build(materialSetLayoutBuilder, renderer->ctx->device);
+}
+
 renderer_renderer* renderer_create(window_window* window) {
     renderer_renderer* renderer = malloc(sizeof(renderer_renderer));
     CLEAR_MEMORY(renderer);
     renderer->ctx = vulkan_context_create(window);
     renderer->swapchain = vulkan_swapchain_create(renderer->ctx);
+    renderer_create_descriptors(renderer);
 
     vulkan_renderpass_builder* renderPassBuilder = vulkan_renderpass_builder_create();
     VkAttachmentDescription colorDescription = vulkan_renderpass_get_default_color_attachment(VK_FORMAT_R8G8B8A8_SRGB , renderer->ctx->physical->maxSamples);
     vulkan_subpass_attachment colorAttachment = vulkan_renderpass_builder_add_attachment(renderPassBuilder, &colorDescription);
+    VkAttachmentDescription depthDescription = vulkan_renderpass_get_default_depth_attachment(renderer->ctx->physical->maxSamples);
+    vulkan_subpass_attachment depthAttachment = vulkan_renderpass_builder_add_attachment(renderPassBuilder, &depthDescription);
     VkAttachmentDescription resolveDescription = vulkan_renderpass_get_default_resolve_attachment(VK_FORMAT_R8G8B8A8_SRGB);
     resolveDescription.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     vulkan_subpass_attachment resolveAttachment = vulkan_renderpass_builder_add_attachment(renderPassBuilder, &resolveDescription);
@@ -101,6 +127,8 @@ renderer_renderer* renderer_create(window_window* window) {
     CLEAR_MEMORY(&renderSubpass);
     renderSubpass.numColorAttachments = 1;
     renderSubpass.colorAttachments = &colorAttachment;
+    renderSubpass.isDepthBuffered = true;
+    renderSubpass.depthAttachment = depthAttachment;
     renderSubpass.isResolving = true;
     renderSubpass.resolveAttachment = resolveAttachment;
     vulkan_renderpass_builder_add_subpass(renderPassBuilder, &renderSubpass);
@@ -129,13 +157,16 @@ renderer_renderer* renderer_create(window_window* window) {
 
     VkDynamicState dynamicStates[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 
+    vulkan_descriptor_set_layout* setLayouts[] = {renderer->vpLayout, renderer->materialSetLayout};
+
     vulkan_pipeline_config pipelineConfig;
     CLEAR_MEMORY(&pipelineConfig);
     pipelineConfig.vertexShader = vertexShader;
     pipelineConfig.fragmentShader = fragmentShader;
     pipelineConfig.subpass = 0;
     pipelineConfig.renderpass = renderer->renderPass;
-    pipelineConfig.numSetLayouts = 0;
+    pipelineConfig.numSetLayouts = 2;
+    pipelineConfig.setLayouts = setLayouts;
     pipelineConfig.numBlendingAttachments = 1;
     pipelineConfig.blendingAttachments = &blendAttachment;
     pipelineConfig.rasterizerCullMode = VK_CULL_MODE_NONE;
@@ -163,9 +194,12 @@ renderer_renderer* renderer_create(window_window* window) {
     renderer->editor = ui_editor_create(renderer->ctx);
 
     renderer->sceneImageMS = vulkan_image_create(renderer->ctx, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 1, 1, VK_IMAGE_ASPECT_COLOR_BIT, renderer->ctx->physical->maxSamples);
+    renderer->depthImageMS = vulkan_image_create(renderer->ctx, VK_FORMAT_D32_SFLOAT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 1, 1, VK_IMAGE_ASPECT_DEPTH_BIT, renderer->ctx->physical->maxSamples);
 
-    vulkan_image* images[] = {renderer->sceneImageMS, renderer->editor->viewport->sceneImage};
-    renderer->renderFramebuffer = vulkan_framebuffer_create(renderer->ctx->device, renderer->renderPass, 2, images);
+    vulkan_image* images[] = {renderer->sceneImageMS, renderer->depthImageMS, renderer->editor->viewport->sceneImage};
+    renderer->renderFramebuffer = vulkan_framebuffer_create(renderer->ctx->device, renderer->renderPass, 3, images);
+
+    renderer->model = model_load("vendor/glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf", renderer->ctx, renderer->materialSetLayout);
 
     return renderer;
 }
@@ -173,6 +207,7 @@ renderer_renderer* renderer_create(window_window* window) {
 void renderer_destroy(renderer_renderer* renderer) {
     vkDeviceWaitIdle(renderer->ctx->device->device);
 
+    model_unload(renderer->model);
     ui_editor_destroy(renderer->editor);
 
     vkDestroyDescriptorPool(renderer->ctx->device->device, renderer->imguiDescriptorPool, NULL);
@@ -188,6 +223,12 @@ void renderer_destroy(renderer_renderer* renderer) {
     vulkan_pipeline_destroy(renderer->renderPipeline);
 
     vulkan_image_destroy(renderer->sceneImageMS);
+    vulkan_image_destroy(renderer->depthImageMS);
+
+    vulkan_descriptor_allocator_destroy(renderer->vpAllocator);
+    vulkan_descriptor_set_layout_destroy(renderer->vpLayout);
+    vulkan_descriptor_set_layout_destroy(renderer->materialSetLayout);
+    vulkan_buffer_destroy(renderer->vpBuffer);
 
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -199,8 +240,14 @@ void renderer_destroy(renderer_renderer* renderer) {
 }
 
 void renderer_render(renderer_renderer* renderer) {
+    static VkCommandBuffer cmd = NULL;
+
     vkWaitForFences(renderer->ctx->device->device, 1, &renderer->inFlight, VK_TRUE, UINT64_MAX);
     vkResetFences(renderer->ctx->device->device, 1, &renderer->inFlight);
+
+    if (cmd != NULL) {
+        vulkan_command_pool_free_buffer(renderer->ctx->commandPool, cmd);
+    }
 
     uint32_t imageIndex;
     VkResult aquireResult = vkAcquireNextImageKHR(renderer->ctx->device->device, renderer->swapchain->swapchain, UINT64_MAX, renderer->imageAvailable, VK_NULL_HANDLE, &imageIndex);
@@ -217,14 +264,30 @@ void renderer_render(renderer_renderer* renderer) {
 
     if (renderer->sceneImageMS->width != renderer->editor->viewport->sceneImage->width || renderer->sceneImageMS->height != renderer->editor->viewport->sceneImage->height) {
         vulkan_image_destroy(renderer->sceneImageMS);
+        vulkan_image_destroy(renderer->depthImageMS);
         vulkan_framebuffer_destroy(renderer->renderFramebuffer);
 
         renderer->sceneImageMS = vulkan_image_create(renderer->ctx, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, renderer->editor->viewport->sceneImage->width, renderer->editor->viewport->sceneImage->height, VK_IMAGE_ASPECT_COLOR_BIT, renderer->ctx->physical->maxSamples);
-        vulkan_image* images[] = {renderer->sceneImageMS, renderer->editor->viewport->sceneImage};
-        renderer->renderFramebuffer = vulkan_framebuffer_create(renderer->ctx->device, renderer->renderPass, 2, images);
+        renderer->depthImageMS = vulkan_image_create(renderer->ctx, VK_FORMAT_D32_SFLOAT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, renderer->editor->viewport->sceneImage->width, renderer->editor->viewport->sceneImage->height, VK_IMAGE_ASPECT_DEPTH_BIT, renderer->ctx->physical->maxSamples);
+        vulkan_image* images[] = {renderer->sceneImageMS, renderer->depthImageMS, renderer->editor->viewport->sceneImage};
+        renderer->renderFramebuffer = vulkan_framebuffer_create(renderer->ctx->device, renderer->renderPass, 3, images);
     }
 
-    VkCommandBuffer cmd = vulkan_context_start_recording(renderer->ctx);
+    // Update view/ projection matrices
+    frame_data frame;
+    CLEAR_MEMORY(&frame);
+    static float cameraDist = 0.0f;
+    cameraDist += 0.1f;
+    vec3 eye = {cameraDist, 10.0, cameraDist};
+    vec3 center = {0.0f, 0.0f, 0.0f};
+    vec3 up = {0.0f, -1.0f, 0.0f};
+    glm_lookat(eye, center, up, frame.view);
+    glm_perspective(45.0f, (float)renderer->editor->viewport->sceneImage->width / (float)renderer->editor->viewport->sceneImage->height, 1.0f, 10000.0f, frame.proj);
+    memcpy(frame.cameraPosition, eye, sizeof(vec3));
+
+    vulkan_buffer_update(renderer->vpBuffer, sizeof(frame), (void*)&frame);
+
+    cmd = vulkan_context_start_recording(renderer->ctx);
     VkRenderPassBeginInfo renderpassInfo;
     CLEAR_MEMORY(&renderpassInfo);
     renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -234,11 +297,12 @@ void renderer_render(renderer_renderer* renderer) {
     renderpassInfo.renderArea.offset.y = 0;
     renderpassInfo.renderArea.extent.width = renderer->editor->viewport->sceneImage->width;
     renderpassInfo.renderArea.extent.height = renderer->editor->viewport->sceneImage->height;
-    VkClearValue clearValue;
-    CLEAR_MEMORY(&clearValue);
-    memset(clearValue.color.float32, 0, sizeof(float) * 4);
-    renderpassInfo.clearValueCount = 1;
-    renderpassInfo.pClearValues = &clearValue;
+    VkClearValue clearValues[2];
+    CLEAR_MEMORY_ARRAY(clearValues, 2);
+    memset(clearValues[0].color.float32, 0, sizeof(float) * 4);
+    clearValues[1].depthStencil.depth = 1.0f;
+    renderpassInfo.clearValueCount = 2;
+    renderpassInfo.pClearValues = clearValues;
 
     vkCmdBeginRenderPass(cmd, &renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->renderPipeline->pipeline);
@@ -261,7 +325,9 @@ void renderer_render(renderer_renderer* renderer) {
     scissor.extent.height = renderer->editor->viewport->sceneImage->height;
     vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-    vkCmdDraw(cmd, 3, 1, 0, 0);
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->renderPipeline->layout->layout, 0, 1, &renderer->vpSet->set, 0, NULL);
+
+    model_render(renderer->model, cmd, renderer->renderPipeline->layout->layout);    
     vkCmdEndRenderPass(cmd);
     
     renderpassInfo.renderPass = renderer->imguiPass->renderpass;
