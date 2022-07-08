@@ -44,5 +44,5 @@ void main() {
     vec3 specular = specularStrength * spec * light; 
 
     vec4 color = material.baseColorFactor * texture(baseColorTexture, fragUV);
-    outColor = vec4(ambient + diffuse, 1.0) * color;
+    outColor = vec4(ambient + diffuse + specular, 1.0) * color;
 }

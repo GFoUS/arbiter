@@ -14,8 +14,12 @@ layout(set = 0, binding = 0) uniform frame_t {
     vec3 cameraPosition;
 } frame;
 
+layout(set = 2, binding = 0) uniform model_t {
+    mat4 model;
+} model;
+
 void main() {
-    gl_Position = frame.proj * frame.view * vec4(inPosition, 1.0);
+    gl_Position = frame.proj * frame.view * model.model * vec4(inPosition, 1.0);
     fragPosition = inPosition;
     fragNormal = inNormal;
     fragUV = inUV;

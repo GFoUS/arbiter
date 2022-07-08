@@ -44,6 +44,7 @@ typedef struct {
     vulkan_buffer* vpBuffer;
 
     vulkan_descriptor_set_layout* materialSetLayout;
+    vulkan_descriptor_set_layout* modelSetLayout;
 } renderer_renderer;
 
 renderer_renderer* renderer_create(window_window* window);

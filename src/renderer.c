@@ -105,6 +105,10 @@ void renderer_create_descriptors(renderer_renderer* renderer) {
     vulkan_descriptor_set_layout_builder_add(materialSetLayoutBuilder, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
     vulkan_descriptor_set_layout_builder_add(materialSetLayoutBuilder, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
     renderer->materialSetLayout = vulkan_descriptor_set_layout_builder_build(materialSetLayoutBuilder, renderer->ctx->device);
+
+    vulkan_descriptor_set_layout_builder* modelSetLayoutBuilder = vulkan_descriptor_set_layout_builder_create();
+    vulkan_descriptor_set_layout_builder_add(modelSetLayoutBuilder, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
+    renderer->modelSetLayout = vulkan_descriptor_set_layout_builder_build(modelSetLayoutBuilder, renderer->ctx->device);
 }
 
 renderer_renderer* renderer_create(window_window* window) {
@@ -157,7 +161,7 @@ renderer_renderer* renderer_create(window_window* window) {
 
     VkDynamicState dynamicStates[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 
-    vulkan_descriptor_set_layout* setLayouts[] = {renderer->vpLayout, renderer->materialSetLayout};
+    vulkan_descriptor_set_layout* setLayouts[] = {renderer->vpLayout, renderer->materialSetLayout, renderer->modelSetLayout};
 
     vulkan_pipeline_config pipelineConfig;
     CLEAR_MEMORY(&pipelineConfig);
@@ -165,7 +169,7 @@ renderer_renderer* renderer_create(window_window* window) {
     pipelineConfig.fragmentShader = fragmentShader;
     pipelineConfig.subpass = 0;
     pipelineConfig.renderpass = renderer->renderPass;
-    pipelineConfig.numSetLayouts = 2;
+    pipelineConfig.numSetLayouts = 3;
     pipelineConfig.setLayouts = setLayouts;
     pipelineConfig.numBlendingAttachments = 1;
     pipelineConfig.blendingAttachments = &blendAttachment;
@@ -199,7 +203,7 @@ renderer_renderer* renderer_create(window_window* window) {
     vulkan_image* images[] = {renderer->sceneImageMS, renderer->depthImageMS, renderer->editor->viewport->sceneImage};
     renderer->renderFramebuffer = vulkan_framebuffer_create(renderer->ctx->device, renderer->renderPass, 3, images);
 
-    renderer->model = model_load("vendor/glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf", renderer->ctx, renderer->materialSetLayout);
+    renderer->model = model_load("vendor/glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf", renderer->ctx, renderer->materialSetLayout, renderer->modelSetLayout);
 
     return renderer;
 }
@@ -228,6 +232,7 @@ void renderer_destroy(renderer_renderer* renderer) {
     vulkan_descriptor_allocator_destroy(renderer->vpAllocator);
     vulkan_descriptor_set_layout_destroy(renderer->vpLayout);
     vulkan_descriptor_set_layout_destroy(renderer->materialSetLayout);
+    vulkan_descriptor_set_layout_destroy(renderer->modelSetLayout);
     vulkan_buffer_destroy(renderer->vpBuffer);
 
     ImGui_ImplVulkan_Shutdown();
@@ -277,12 +282,12 @@ void renderer_render(renderer_renderer* renderer) {
     frame_data frame;
     CLEAR_MEMORY(&frame);
     static float cameraDist = 0.0f;
-    cameraDist += 0.1f;
-    vec3 eye = {cameraDist, 10.0, cameraDist};
+    cameraDist += 0.01f;
+    vec3 eye = {cameraDist, 0.5f, cameraDist};
     vec3 center = {0.0f, 0.0f, 0.0f};
     vec3 up = {0.0f, -1.0f, 0.0f};
     glm_lookat(eye, center, up, frame.view);
-    glm_perspective(45.0f, (float)renderer->editor->viewport->sceneImage->width / (float)renderer->editor->viewport->sceneImage->height, 1.0f, 10000.0f, frame.proj);
+    glm_perspective(45.0f, (float)renderer->editor->viewport->sceneImage->width / (float)renderer->editor->viewport->sceneImage->height, 0.1f, 10000.0f, frame.proj);
     memcpy(frame.cameraPosition, eye, sizeof(vec3));
 
     vulkan_buffer_update(renderer->vpBuffer, sizeof(frame), (void*)&frame);
