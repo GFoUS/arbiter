@@ -2,12 +2,14 @@
 
 #include "dockspace.h"
 #include "viewport.h"
+#include "menubar/menubar.h"
 
 #include "vulkan/context.h"
 
 typedef struct {
     ui_dockspace* dockspace;
     ui_viewport* viewport;
+    ui_menubar* menubar;
 
     vulkan_context* ctx;
 } ui_editor;

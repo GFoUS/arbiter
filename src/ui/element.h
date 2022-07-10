@@ -4,7 +4,8 @@
 
 typedef enum {
     UI_ELEMENT_DOCKSPACE = 0,
-    UI_ELEMENT_VIEWPORT
+    UI_ELEMENT_VIEWPORT,
+    UI_ELEMENT_MENU_BAR
 } ui_element_type;
 
 typedef struct ui_element {

@@ -14,6 +14,7 @@ ui_editor* ui_editor_create(vulkan_context* ctx) {
 
     editor->dockspace = ui_dockspace_create();
     editor->viewport = ui_viewport_create(editor->dockspace, ctx);
+    editor->menubar = ui_menubar_create();
 
     return editor;
 }
@@ -29,6 +30,7 @@ void ui_editor_render(ui_editor* editor) {
     ImGui_ImplGlfw_NewFrame();
     igNewFrame();
 
+    ui_element_render((ui_element*)editor->menubar);
     ui_element_render((ui_element*)editor->dockspace);
 
     igRender();
