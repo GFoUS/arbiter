@@ -13,7 +13,44 @@ typedef struct {
 
 void renderer_init_imgui(renderer_renderer* renderer) {
     igCreateContext(0);
+
     igStyleColorsDark(NULL);
+    ImVec4* colors = igGetStyle()->Colors;
+    ImVec4 dark1 = { 0.1f, 0.105f, 0.11f, 1.0f };
+    ImVec4 dark2 = { 0.15f, 0.1505f, 0.151f, 1.0f };
+    ImVec4 dark3 = { 0.2f, 0.205f, 0.21f, 1.0f };
+    ImVec4 dark4 = { 0.28f, 0.2805f, 0.281f, 1.0f };
+    ImVec4 dark5 = { 0.3f, 0.305f, 0.31f, 1.0f };
+    ImVec4 dark6 = {  0.38f, 0.3805f, 0.381f, 1.0f };
+	colors[ImGuiCol_WindowBg] = dark1;
+
+	// Headers
+	colors[ImGuiCol_Header] = dark3;
+	colors[ImGuiCol_HeaderHovered] = dark5;
+	colors[ImGuiCol_HeaderActive] = dark2;
+
+	// Buttons
+	colors[ImGuiCol_Button] = dark3;
+	colors[ImGuiCol_ButtonHovered] = dark5;
+	colors[ImGuiCol_ButtonActive] = dark2;
+
+	// Frame BG
+	colors[ImGuiCol_FrameBg] = dark3;
+	colors[ImGuiCol_FrameBgHovered] = dark5;
+	colors[ImGuiCol_FrameBgActive] = dark2;
+
+	// Tabs
+	colors[ImGuiCol_Tab] = dark2;
+	colors[ImGuiCol_TabHovered] = dark6;
+	colors[ImGuiCol_TabActive] = dark4;
+	colors[ImGuiCol_TabUnfocused] = dark2;
+	colors[ImGuiCol_TabUnfocusedActive] = dark3;
+
+	// Title
+	colors[ImGuiCol_TitleBg] = dark2;
+	colors[ImGuiCol_TitleBgActive] = dark2;
+	colors[ImGuiCol_TitleBgCollapsed] = dark2;
+
     ImGuiIO* io = igGetIO();
     io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -60,6 +97,9 @@ void renderer_init_imgui(renderer_renderer* renderer) {
     imguiVulkan.CheckVkResultFn = NULL;
     ImGui_ImplVulkan_Init(&imguiVulkan, renderer->imguiPass->renderpass);
 
+
+    // Upload fonts
+    ImFontAtlas_AddFontFromFileTTF(io->Fonts, "assets/fonts/SourceSansPro/SourceSansPro-SemiBold.ttf", 16.0f, NULL, NULL);
     VkCommandBuffer cmd = vulkan_context_start_recording(renderer->ctx);
     ImGui_ImplVulkan_CreateFontsTexture(cmd);
     vulkan_context_submit(renderer->ctx, cmd);
@@ -151,8 +191,8 @@ renderer_renderer* renderer_create(window_window* window) {
 
     renderer->imguiPass = vulkan_renderpass_builder_build(imguiPassBuilder, renderer->ctx->device);
 
-    vulkan_shader* vertexShader = vulkan_shader_load_from_file(renderer->ctx->device, "shaders/shader.vert.spv", VERTEX);
-    vulkan_shader* fragmentShader = vulkan_shader_load_from_file(renderer->ctx->device, "shaders/shader.frag.spv", FRAGMENT);
+    vulkan_shader* vertexShader = vulkan_shader_load_from_file(renderer->ctx->device, "assets/shaders/shader.vert.spv", VERTEX);
+    vulkan_shader* fragmentShader = vulkan_shader_load_from_file(renderer->ctx->device, "assets/shaders/shader.frag.spv", FRAGMENT);
 
     VkPipelineColorBlendAttachmentState blendAttachment;
     CLEAR_MEMORY(&blendAttachment);
