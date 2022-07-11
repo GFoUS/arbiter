@@ -1,0 +1,32 @@
+on:
+  push:
+      branches: [ main ]
+  pull_request:
+      branches: [ main ]
+
+jobs:
+  make_dist:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Compile and Copy Artifacts
+      - run: mkdir build && cd build
+      - run: cmake -DCMAKE_BUILD_TYPE=Release ..
+      - run: cmake --build .
+      - run: mkdir dist && cd dist
+      - run: cp ../Release/arbiter.exe . &&
+             cp ../Release/arbiter.exp . &&
+             cp ../Release/arbiter.lib . &&
+             cp ../aether/Release/aether.lib . &&
+             cp ../aether/vendor/cglm/Release/cglm.exp . &&
+             cp ../aether/vendor/cglm/Release/cglm.lib . &&
+             cp ../aether/vendor/cglm/Release/cglm-0.dll . &&
+             cp ../aether/vendor/glfw/src/Release/glfw3.lib . &&
+             cp ../aether/vendor/nativefiledialog-extended/src/Release/nfd.lib . &&
+             cd .. && tar.exe -a -c -f dist.zip dist
+      - name: Add to release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: build/dist.zip
