@@ -31,7 +31,7 @@ jobs:
              cp ../aether/vendor/cglm/Debug/cglm-0.dll . &&
              cp ../aether/vendor/glfw/src/Debug/glfw3.lib . &&
              cp ../aether/vendor/nativefiledialog-extended/src/Debug/nfd.lib . &&
-             cp -r ../../shaders . &&
+             cp -r ../../assets . &&
              cd .. && tar.exe -a -c -f dist.zip dist
       - name: Add to release
         uses: softprops/action-gh-release@v1
