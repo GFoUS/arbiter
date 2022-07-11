@@ -11,7 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Clone aether
-        run: cd .. && git clone https://github.com/gfous/aether
+        run: cd .. && git clone --recursive https://github.com/gfous/aether
       - name: Compile and Copy Artifacts
         run: mkdir build && cd build &&
              cmake -DCMAKE_BUILD_TYPE=Release .. &&
