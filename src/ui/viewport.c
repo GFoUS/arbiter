@@ -7,11 +7,11 @@
 #include "cimgui_impl.h"
 
 void ui_viewport_resize(ui_viewport* viewport, ImVec2 size) {
-    vulkan_image_destroy(viewport->sceneImage);
     ImVec2 min = {.x = 1.0f, .y = 1.0f};
     ImVec2 max = {.x = 10000.0f, .y = 10000.0f};
     ImVec2 clampedSize;
     igImClamp(&clampedSize, size, min, max);
+    vulkan_image_destroy(viewport->sceneImage);
     viewport->sceneImage = vulkan_image_create(viewport->ctx, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, (u32)clampedSize.x, (u32)clampedSize.y, VK_IMAGE_ASPECT_COLOR_BIT, VK_SAMPLE_COUNT_1_BIT);
     
     VkDescriptorImageInfo imageInfo;

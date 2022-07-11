@@ -7,7 +7,7 @@
 
 #include "ui/editor.h"
 
-#include "graphics/model.h"
+#include "project/project.h"
 
 #define CIMGUI_USE_GLFW
 #define CIMGUI_USE_VULKAN
@@ -36,7 +36,8 @@ typedef struct {
     VkDescriptorPool imguiDescriptorPool;
 
     ui_editor* editor;
-    model_model* model;
+    u32 numModels;
+    project_asset_model** models;
 
     vulkan_descriptor_set_layout* vpLayout;
     vulkan_descriptor_allocator* vpAllocator;

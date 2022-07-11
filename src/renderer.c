@@ -203,15 +203,12 @@ renderer_renderer* renderer_create(window_window* window) {
     vulkan_image* images[] = {renderer->sceneImageMS, renderer->depthImageMS, renderer->editor->viewport->sceneImage};
     renderer->renderFramebuffer = vulkan_framebuffer_create(renderer->ctx->device, renderer->renderPass, 3, images);
 
-    renderer->model = model_load("vendor/glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf", renderer->ctx, renderer->materialSetLayout, renderer->modelSetLayout);
-
     return renderer;
 }
 
 void renderer_destroy(renderer_renderer* renderer) {
     vkDeviceWaitIdle(renderer->ctx->device->device);
 
-    model_unload(renderer->model);
     ui_editor_destroy(renderer->editor);
 
     vkDestroyDescriptorPool(renderer->ctx->device->device, renderer->imguiDescriptorPool, NULL);
@@ -238,6 +235,8 @@ void renderer_destroy(renderer_renderer* renderer) {
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     igDestroyContext(NULL);
+
+    project_destroy();
 
     renderer_destroy_swapchain(renderer);
     vulkan_context_destroy(renderer->ctx);
@@ -292,6 +291,22 @@ void renderer_render(renderer_renderer* renderer) {
 
     vulkan_buffer_update(renderer->vpBuffer, sizeof(frame), (void*)&frame);
 
+    u32 numModels = 0;
+    project_asset** assets = project_get_assets_with_type(&numModels, ASSET_TYPE_MODEL);
+    if (assets && renderer->numModels != numModels) {
+        if (renderer->models) free(renderer->models);
+        renderer->models = malloc(sizeof(project_asset_model*) * numModels);
+        project_asset_model_load_config config;
+        CLEAR_MEMORY(&config);
+        config.ctx = renderer->ctx;
+        config.materialSetLayout = renderer->materialSetLayout;
+        config.modelSetLayout = renderer->modelSetLayout;
+
+        for (u32 i = 0; i < numModels; i++) {
+            renderer->models[i] = project_asset_model_load(assets[i], &config);
+        }
+    }
+
     cmd = vulkan_context_start_recording(renderer->ctx);
     VkRenderPassBeginInfo renderpassInfo;
     CLEAR_MEMORY(&renderpassInfo);
@@ -332,7 +347,9 @@ void renderer_render(renderer_renderer* renderer) {
 
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->renderPipeline->layout->layout, 0, 1, &renderer->vpSet->set, 0, NULL);
 
-    model_render(renderer->model, cmd, renderer->renderPipeline->layout->layout);    
+    for (u32 i = 0; i < numModels; i++) {
+        model_render(renderer->models[i]->model, cmd, renderer->renderPipeline->layout->layout);
+    }
     vkCmdEndRenderPass(cmd);
     
     renderpassInfo.renderPass = renderer->imguiPass->renderpass;

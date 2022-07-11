@@ -29,6 +29,17 @@ void ui_menubar_render(ui_element* menubarElement, void(*body)(ui_element*)) {
                 if (path) project_save(path);
             }
 
+            igSeparator();
+
+            if (igBeginMenu("Import", !!project_get())) {
+                if (igMenuItem_Bool("Model", NULL, false, true)) {
+                    fs_dialog_filter filter = {.name = "glTF Models", .extension = "gltf, glb"};
+                    const char* path = fs_open_dialog(1, &filter);
+                    if (path) project_add_asset(ASSET_TYPE_MODEL, path);
+                }
+                igEndMenu();
+            }
+
             igEndMenu();
         }
         igEndMainMenuBar();
