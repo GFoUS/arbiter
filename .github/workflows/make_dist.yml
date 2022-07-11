@@ -11,11 +11,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Compile and Copy Artifacts
-      - run: mkdir build && cd build
-      - run: cmake -DCMAKE_BUILD_TYPE=Release ..
-      - run: cmake --build .
-      - run: mkdir dist && cd dist
-      - run: cp ../Release/arbiter.exe . &&
+        run: mkdir build && cd build
+        run: cmake -DCMAKE_BUILD_TYPE=Release ..
+        run: cmake --build .
+        run: mkdir dist && cd dist
+        run: cp ../Release/arbiter.exe . &&
              cp ../Release/arbiter.exp . &&
              cp ../Release/arbiter.lib . &&
              cp ../aether/Release/aether.lib . &&
