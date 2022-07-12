@@ -20,7 +20,7 @@ jobs:
       - name: Compile and Copy Artifacts
         run: mkdir build && cd build &&
              cmake -D CMAKE_BUILD_TYPE=Release .. &&
-             cmake --build . &&
+             cmake --build . --config Release &&
              mkdir dist && cd dist &&
              cp ../Release/arbiter.exe . &&
              cp ../Release/arbiter.exp . &&
