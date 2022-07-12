@@ -2,6 +2,8 @@
 
 #include "cimgui_impl.h"
 #include "cglm/cglm.h"
+#include "project/ecs/world.h"
+#include "project/ecs/components/model.h"
 
 typedef struct ImGui_ImplVulkan_InitInfo ImGui_ImplVulkan_InitInfo;
 
@@ -96,14 +98,6 @@ void renderer_init_imgui(renderer_renderer* renderer) {
     imguiVulkan.ImageCount = renderer->swapchain->numImages;
     imguiVulkan.CheckVkResultFn = NULL;
     ImGui_ImplVulkan_Init(&imguiVulkan, renderer->imguiPass->renderpass);
-
-
-    // Upload fonts
-    ImFontAtlas_AddFontFromFileTTF(io->Fonts, "assets/fonts/SourceSansPro/SourceSansPro-SemiBold.ttf", 16.0f, NULL, NULL);
-    VkCommandBuffer cmd = vulkan_context_start_recording(renderer->ctx);
-    ImGui_ImplVulkan_CreateFontsTexture(cmd);
-    vulkan_context_submit(renderer->ctx, cmd);
-    ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 
 void renderer_destroy_swapchain(renderer_renderer* renderer) {
@@ -333,17 +327,14 @@ void renderer_render(renderer_renderer* renderer) {
 
     u32 numModels = 0;
     project_asset** assets = project_get_assets_with_type(&numModels, ASSET_TYPE_MODEL);
-    if (assets && renderer->numModels != numModels) {
-        if (renderer->models) free(renderer->models);
-        renderer->models = malloc(sizeof(project_asset_model*) * numModels);
-        project_asset_model_load_config config;
-        CLEAR_MEMORY(&config);
-        config.ctx = renderer->ctx;
-        config.materialSetLayout = renderer->materialSetLayout;
-        config.modelSetLayout = renderer->modelSetLayout;
-
-        for (u32 i = 0; i < numModels; i++) {
-            renderer->models[i] = project_asset_model_load(assets[i], &config);
+    project_asset_model_load_config modelLoadConfig;
+    CLEAR_MEMORY(&modelLoadConfig);
+    modelLoadConfig.ctx = renderer->ctx;
+    modelLoadConfig.materialSetLayout = renderer->materialSetLayout;
+    modelLoadConfig.modelSetLayout = renderer->modelSetLayout;
+    for (u32 i = 0; i < numModels; i++) {
+        if (!assets[i]->numTimesLoaded) {
+            project_asset_model_load(assets[i], &modelLoadConfig);
         }
     }
 
@@ -387,9 +378,14 @@ void renderer_render(renderer_renderer* renderer) {
 
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->renderPipeline->layout->layout, 0, 1, &renderer->vpSet->set, 0, NULL);
 
-    for (u32 i = 0; i < numModels; i++) {
-        model_render(renderer->models[i]->model, cmd, renderer->renderPipeline->layout->layout);
+    ecs_world* world = ecs_world_get();
+    for (u32 i = 0; i < world->numEntities; i++) {
+        ecs_component_model* modelComponent = (ecs_component_model*)ecs_entity_get_component(world->entities[i], COMPONENT_TYPE_MODEL);
+        if (modelComponent != NULL) {
+            model_render(((project_asset_model*)modelComponent->asset->loadedData)->model, cmd, renderer->renderPipeline->layout->layout);
+        }
     }
+
     vkCmdEndRenderPass(cmd);
     
     renderpassInfo.renderPass = renderer->imguiPass->renderpass;
