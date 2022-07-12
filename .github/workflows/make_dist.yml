@@ -1,8 +1,7 @@
 on:
   push:
-      branches: [ main ]
-  pull_request:
-      branches: [ main ]
+    tags:
+    - '*'
 
 jobs:
   make_dist:
@@ -10,12 +9,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Clone aether
+        run: cd .. && git clone --recursive https://github.com/gfous/aether
+      - name: Prepare Vulkan SDK
+        uses: humbletim/setup-vulkan-sdk@v1.2.0
+        with:
+          vulkan-query-version: 1.3.204.0
+          vulkan-components: Vulkan-Headers, Vulkan-Loader
+          vulkan-use-cache: true
       - name: Compile and Copy Artifacts
-      - run: mkdir build && cd build
-      - run: cmake -DCMAKE_BUILD_TYPE=Release ..
-      - run: cmake --build .
-      - run: mkdir dist && cd dist
-      - run: cp ../Release/arbiter.exe . &&
+        run: mkdir build && cd build &&
+             cmake -D CMAKE_BUILD_TYPE=Release .. &&
+             cmake --build . --config Release &&
+             mkdir dist && cd dist &&
+             cp ../Release/arbiter.exe . &&
              cp ../Release/arbiter.exp . &&
              cp ../Release/arbiter.lib . &&
              cp ../aether/Release/aether.lib . &&
@@ -24,6 +31,7 @@ jobs:
              cp ../aether/vendor/cglm/Release/cglm-0.dll . &&
              cp ../aether/vendor/glfw/src/Release/glfw3.lib . &&
              cp ../aether/vendor/nativefiledialog-extended/src/Release/nfd.lib . &&
+             cp -r ../../assets . &&
              cd .. && tar.exe -a -c -f dist.zip dist
       - name: Add to release
         uses: softprops/action-gh-release@v1
