@@ -19,18 +19,18 @@ jobs:
           vulkan-use-cache: true
       - name: Compile and Copy Artifacts
         run: mkdir build && cd build &&
-             cmake -DCMAKE_BUILD_TYPE=Release .. &&
+             cmake -D CMAKE_BUILD_TYPE=Release .. &&
              cmake --build . &&
              mkdir dist && cd dist &&
-             cp ../Debug/arbiter.exe . &&
-             cp ../Debug/arbiter.exp . &&
-             cp ../Debug/arbiter.lib . &&
-             cp ../aether/Debug/aether.lib . &&
-             cp ../aether/vendor/cglm/Debug/cglm.exp . &&
-             cp ../aether/vendor/cglm/Debug/cglm.lib . &&
-             cp ../aether/vendor/cglm/Debug/cglm-0.dll . &&
-             cp ../aether/vendor/glfw/src/Debug/glfw3.lib . &&
-             cp ../aether/vendor/nativefiledialog-extended/src/Debug/nfd.lib . &&
+             cp ../Release/arbiter.exe . &&
+             cp ../Release/arbiter.exp . &&
+             cp ../Release/arbiter.lib . &&
+             cp ../aether/Release/aether.lib . &&
+             cp ../aether/vendor/cglm/Release/cglm.exp . &&
+             cp ../aether/vendor/cglm/Release/cglm.lib . &&
+             cp ../aether/vendor/cglm/Release/cglm-0.dll . &&
+             cp ../aether/vendor/glfw/src/Release/glfw3.lib . &&
+             cp ../aether/vendor/nativefiledialog-extended/src/Release/nfd.lib . &&
              cp -r ../../assets . &&
              cd .. && tar.exe -a -c -f dist.zip dist
       - name: Add to release
