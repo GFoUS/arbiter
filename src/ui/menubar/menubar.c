@@ -4,6 +4,7 @@
 #include "cimgui.h"
 
 #include "project/project.h"
+#include "project/ecs/ecs.h"
 
 void ui_menubar_render(ui_element* menubarElement, void(*body)(ui_element*)) {
     ui_menubar* menubar = (ui_menubar*)menubarElement;
@@ -12,9 +13,9 @@ void ui_menubar_render(ui_element* menubarElement, void(*body)(ui_element*)) {
         if (igBeginMenu("File", true)) {
             if (igMenuItem_Bool("New Project", NULL, false, true)) {
                 menubar->inNewProjectWizard = true;
-                if (!menubar->newProjectName) free(menubar->newProjectName);
-                menubar->newProjectName = malloc(sizeof(char) * 256);
-                CLEAR_MEMORY_ARRAY(menubar->newProjectName, 256);
+                if (!menubar->buf) free(menubar->buf);
+                menubar->buf = malloc(sizeof(char) * 256);
+                CLEAR_MEMORY_ARRAY(menubar->buf, 256);
             }
 
             if (igMenuItem_Bool("Open Project", "Ctrl+O", false, true)) {
@@ -40,21 +41,34 @@ void ui_menubar_render(ui_element* menubarElement, void(*body)(ui_element*)) {
                 igEndMenu();
             }
 
+            if (igMenuItem_Bool("Add Entity", "Ctrl+E", false, !!project_get())) {
+                menubar->inAddEntityWizard = true;
+                if (!menubar->buf) free(menubar->buf);
+                menubar->buf = malloc(sizeof(char) * 256);
+                CLEAR_MEMORY_ARRAY(menubar->buf, 256);
+            }
+
             igEndMenu();
         }
         igEndMainMenuBar();
     }
 
-    if (menubar->inNewProjectWizard) {
+    if (menubar->inNewProjectWizard || menubar->inAddEntityWizard) {
         if (!igIsPopupOpen_Str("Name?", 0)) igOpenPopup_Str("Name?", 0);
 
         igBeginPopupModal("Name?", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 
         ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue;
-        if (igInputText("Name: ", menubar->newProjectName, sizeof(char) * 256, flags, NULL, NULL)) {
-            project_create(menubar->newProjectName);
-
-            menubar->inNewProjectWizard = false;
+        if (igInputText("Name", menubar->buf, sizeof(char) * 256, flags, NULL, NULL)) {
+            if (menubar->inNewProjectWizard) {
+                project_create(menubar->buf);
+                menubar->inNewProjectWizard = false;
+            } else if (menubar->inAddEntityWizard) {
+                ecs_entity* entity = ecs_entity_create();
+                ecs_component_tag_create(entity, menubar->buf);
+                menubar->inAddEntityWizard = false;
+            }
+            
         }
 
         igEndPopup();
@@ -65,7 +79,7 @@ void ui_menubar_render(ui_element* menubarElement, void(*body)(ui_element*)) {
 
 void ui_menubar_destroy(ui_element* menubarElement) {
     ui_menubar* menubar = (ui_menubar*)menubarElement;
-    free(menubar->newProjectName);
+    free(menubar->buf);
 }
 
 ui_menubar* ui_menubar_create() {
@@ -80,7 +94,8 @@ ui_menubar* ui_menubar_create() {
     ui_element_create((ui_element*)menubar, &config);
 
     menubar->inNewProjectWizard = false;
-    menubar->newProjectName = NULL;
+    menubar->inAddEntityWizard = false;
+    menubar->buf = NULL;
 
     return menubar;
 }

@@ -1,6 +1,7 @@
 #include "world_hierarchy.h"
 
 #include "project/ecs/ecs.h"
+#include "core/arbiter_event.h"
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
@@ -12,7 +13,7 @@ void ui_world_hierarchy_render(ui_element* hierarchyElement, void(*body)(ui_elem
 
     ecs_world* world = ecs_world_get();
     for (u32 i = 0; i < world->numEntities; i++) {
-        ecs_component_tag* tagComponent = ecs_entity_get_component(world->entities[i], COMPONENT_TYPE_TAG);
+        ecs_component_tag* tagComponent = (ecs_component_tag*)ecs_entity_get_component(world->entities[i], COMPONENT_TYPE_TAG);
         if (tagComponent != NULL) {
             if (igTreeNodeEx_Str(tagComponent->tag, ImGuiTreeNodeFlags_OpenOnArrow)) {
                 igTreePop();
@@ -20,6 +21,7 @@ void ui_world_hierarchy_render(ui_element* hierarchyElement, void(*body)(ui_elem
 
             if (igIsItemClicked(ImGuiMouseButton_Left)) {
                 INFO("Clicked on entity: %s", tagComponent->tag);
+                event_bus_submit(ENTITY_SELECTED, world->entities[i]);
             }
         }
     }

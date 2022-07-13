@@ -381,7 +381,7 @@ void renderer_render(renderer_renderer* renderer) {
     ecs_world* world = ecs_world_get();
     for (u32 i = 0; i < world->numEntities; i++) {
         ecs_component_model* modelComponent = (ecs_component_model*)ecs_entity_get_component(world->entities[i], COMPONENT_TYPE_MODEL);
-        if (modelComponent != NULL) {
+        if (modelComponent != NULL && modelComponent->asset != NULL) {
             model_render(((project_asset_model*)modelComponent->asset->loadedData)->model, cmd, renderer->renderPipeline->layout->layout);
         }
     }

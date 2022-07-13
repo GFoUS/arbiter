@@ -18,8 +18,7 @@ event_listener* exit_on_escape_get_listener() {
 
 void exit_on_escape_init() {
     event_listener* listener = exit_on_escape_get_listener();
-    listener = malloc(sizeof(event_listener));
-    CLEAR_MEMORY(listener);
+    listener = event_listener_create();
     listener->keyPress = onKeyPress;
     event_bus_listen(*(event_listener_generic*)listener);
 }

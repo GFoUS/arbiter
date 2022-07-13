@@ -6,7 +6,9 @@ typedef struct {
     ui_element element;
 
     bool inNewProjectWizard;
-    char* newProjectName;
+    bool inAddEntityWizard;
+    char* buf;
+
 } ui_menubar;
 
 ui_menubar* ui_menubar_create();

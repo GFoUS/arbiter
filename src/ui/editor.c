@@ -18,6 +18,7 @@ ui_editor* ui_editor_create(vulkan_context* ctx) {
     editor->viewport = ui_viewport_create(editor->dockspace, ctx);
     editor->menubar = ui_menubar_create();
     editor->hierarchy = ui_world_hierarchy_create(editor->dockspace);
+    editor->properties = ui_properties_create(editor->dockspace);
 
     ui_font_load(ctx, "assets/fonts/JetBrainsMono/JetBrainsMono-");
 

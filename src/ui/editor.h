@@ -4,6 +4,7 @@
 #include "viewport.h"
 #include "menubar/menubar.h"
 #include "world_hierarchy.h"
+#include "properties.h"
 
 #include "vulkan/context.h"
 
@@ -12,6 +13,7 @@ typedef struct {
     ui_viewport* viewport;
     ui_menubar* menubar;
     ui_world_hierarchy* hierarchy;
+    ui_properties* properties;
 
     vulkan_context* ctx;
 } ui_editor;
