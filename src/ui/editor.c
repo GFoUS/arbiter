@@ -17,6 +17,7 @@ ui_editor* ui_editor_create(vulkan_context* ctx) {
     editor->dockspace = ui_dockspace_create();
     editor->viewport = ui_viewport_create(editor->dockspace, ctx);
     editor->menubar = ui_menubar_create();
+    editor->hierarchy = ui_world_hierarchy_create(editor->dockspace);
 
     ui_font_load(ctx, "assets/fonts/JetBrainsMono/JetBrainsMono-");
 
@@ -25,6 +26,7 @@ ui_editor* ui_editor_create(vulkan_context* ctx) {
 
 void ui_editor_destroy(ui_editor* editor) {
     ui_element_destroy((ui_element*)editor->dockspace);
+    ui_element_destroy((ui_element*)editor->menubar);
 
     free(editor);
 }

@@ -3,6 +3,7 @@
 #include "dockspace.h"
 #include "viewport.h"
 #include "menubar/menubar.h"
+#include "world_hierarchy.h"
 
 #include "vulkan/context.h"
 
@@ -10,6 +11,7 @@ typedef struct {
     ui_dockspace* dockspace;
     ui_viewport* viewport;
     ui_menubar* menubar;
+    ui_world_hierarchy* hierarchy;
 
     vulkan_context* ctx;
 } ui_editor;

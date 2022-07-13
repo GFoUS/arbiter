@@ -36,6 +36,6 @@ void ui_element_render_body(ui_element* element) {
 }
 
 void ui_element_render(ui_element* element) {
-    element->renderCallback(element, ui_element_render_body);
+    if (element->renderCallback) element->renderCallback(element, ui_element_render_body);
 }
 

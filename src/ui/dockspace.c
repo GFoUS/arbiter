@@ -31,16 +31,14 @@ void ui_dockspace_render(ui_element* dockspaceElement, void(*body)(ui_element*))
     igEnd();
 }
 
-void ui_dockspace_destroy(ui_element* dockspaceElement) {}
-
 ui_dockspace* ui_dockspace_create() {
     ui_dockspace* dockspace = malloc(sizeof(ui_dockspace));
     CLEAR_MEMORY(dockspace);
 
     ui_element_config config;
+    CLEAR_MEMORY(&config);
     config.type = UI_ELEMENT_DOCKSPACE;
     config.parent = NULL;
-    config.destroyCallback = ui_dockspace_destroy;
     config.renderCallback = ui_dockspace_render;
     ui_element_create(&dockspace->element, &config);
 
