@@ -4,6 +4,7 @@
 #include "cglm/cglm.h"
 #include "project/ecs/world.h"
 #include "project/ecs/components/model.h"
+#include "ui/colors.h"
 
 typedef struct ImGui_ImplVulkan_InitInfo ImGui_ImplVulkan_InitInfo;
 
@@ -18,40 +19,36 @@ void renderer_init_imgui(renderer_renderer* renderer) {
 
     igStyleColorsDark(NULL);
     ImVec4* colors = igGetStyle()->Colors;
-    ImVec4 dark1 = { 0.1f, 0.105f, 0.11f, 1.0f };
-    ImVec4 dark2 = { 0.15f, 0.1505f, 0.151f, 1.0f };
-    ImVec4 dark3 = { 0.2f, 0.205f, 0.21f, 1.0f };
-    ImVec4 dark4 = { 0.28f, 0.2805f, 0.281f, 1.0f };
-    ImVec4 dark5 = { 0.3f, 0.305f, 0.31f, 1.0f };
-    ImVec4 dark6 = {  0.38f, 0.3805f, 0.381f, 1.0f };
-	colors[ImGuiCol_WindowBg] = dark1;
+	colors[ImGuiCol_WindowBg] = color_to_imvec4(STONE900);
 
 	// Headers
-	colors[ImGuiCol_Header] = dark3;
-	colors[ImGuiCol_HeaderHovered] = dark5;
-	colors[ImGuiCol_HeaderActive] = dark2;
+	colors[ImGuiCol_Header] = color_to_imvec4(STONE800);
+	colors[ImGuiCol_HeaderHovered] = color_to_imvec4(STONE700);
+	colors[ImGuiCol_HeaderActive] = color_to_imvec4(STONE900);
 
 	// Buttons
-	colors[ImGuiCol_Button] = dark3;
-	colors[ImGuiCol_ButtonHovered] = dark5;
-	colors[ImGuiCol_ButtonActive] = dark2;
+	colors[ImGuiCol_Button] = color_to_imvec4(STONE800);
+	colors[ImGuiCol_ButtonHovered] = color_to_imvec4(STONE700);
+	colors[ImGuiCol_ButtonActive] = color_to_imvec4(STONE900);
 
 	// Frame BG
-	colors[ImGuiCol_FrameBg] = dark3;
-	colors[ImGuiCol_FrameBgHovered] = dark5;
-	colors[ImGuiCol_FrameBgActive] = dark2;
+	colors[ImGuiCol_FrameBg] = color_to_imvec4(STONE800);
+	colors[ImGuiCol_FrameBgHovered] = color_to_imvec4(STONE700);
+	colors[ImGuiCol_FrameBgActive] = color_to_imvec4(STONE900);
 
 	// Tabs
-	colors[ImGuiCol_Tab] = dark2;
-	colors[ImGuiCol_TabHovered] = dark6;
-	colors[ImGuiCol_TabActive] = dark4;
-	colors[ImGuiCol_TabUnfocused] = dark2;
-	colors[ImGuiCol_TabUnfocusedActive] = dark3;
+	colors[ImGuiCol_Tab] = color_to_imvec4(STONE800);
+	colors[ImGuiCol_TabHovered] = color_to_imvec4(STONE700);
+	colors[ImGuiCol_TabActive] = color_to_imvec4(STONE900);
+	colors[ImGuiCol_TabUnfocused] = color_to_imvec4(STONE800);
+	colors[ImGuiCol_TabUnfocusedActive] = color_to_imvec4(STONE900);
 
 	// Title
-	colors[ImGuiCol_TitleBg] = dark2;
-	colors[ImGuiCol_TitleBgActive] = dark2;
-	colors[ImGuiCol_TitleBgCollapsed] = dark2;
+	colors[ImGuiCol_TitleBg] = color_to_imvec4(STONE800);
+	colors[ImGuiCol_TitleBgActive] = color_to_imvec4(STONE800);
+	colors[ImGuiCol_TitleBgCollapsed] = color_to_imvec4(STONE800);
+
+    colors[ImGuiCol_MenuBarBg] = color_to_imvec4(STONE900);
 
     ImGuiIO* io = igGetIO();
     io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -313,15 +310,9 @@ void renderer_render(renderer_renderer* renderer) {
 
     // Update view/ projection matrices
     frame_data frame;
-    CLEAR_MEMORY(&frame);
-    static float cameraDist = 0.0f;
-    cameraDist += 0.01f;
-    vec3 eye = {cameraDist, 0.5f, cameraDist};
-    vec3 center = {0.0f, 0.0f, 0.0f};
-    vec3 up = {0.0f, -1.0f, 0.0f};
-    glm_lookat(eye, center, up, frame.view);
-    glm_perspective(45.0f, (float)renderer->editor->viewport->sceneImage->width / (float)renderer->editor->viewport->sceneImage->height, 0.1f, 10000.0f, frame.proj);
-    memcpy(frame.cameraPosition, eye, sizeof(vec3));
+    ui_camera_get_eye(renderer->editor->viewport->camera, frame.cameraPosition);
+    glm_mat4_copy(renderer->editor->viewport->camera->view, frame.view);
+    glm_mat4_copy(renderer->editor->viewport->camera->proj, frame.proj);
 
     vulkan_buffer_update(renderer->vpBuffer, sizeof(frame), (void*)&frame);
 

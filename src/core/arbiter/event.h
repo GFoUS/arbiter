@@ -8,6 +8,6 @@ typedef enum {
 
 typedef struct {
     event_listener listener;
-    void(*entitySelected)(void* data);
+    void(*entitySelected)(void*, void*);
 } arbiter_event_listener;
 

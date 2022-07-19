@@ -76,5 +76,7 @@ ui_viewport* ui_viewport_create(ui_dockspace* parent, vulkan_context* ctx) {
     viewport->sceneImageSampler = vulkan_sampler_create(ctx, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     viewport->sceneTexture = ImGui_ImplVulkan_AddTexture(viewport->sceneImageSampler->sampler, viewport->sceneImage->imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
+    viewport->camera = ui_camera_create(viewport, 45.0f, 0.01f, 10000.0f);
+
     return viewport;
 }

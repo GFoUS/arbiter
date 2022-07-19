@@ -1,7 +1,7 @@
 #include "world_hierarchy.h"
 
 #include "project/ecs/ecs.h"
-#include "core/arbiter_event.h"
+#include "core/arbiter/event.h"
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"

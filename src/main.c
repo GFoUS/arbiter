@@ -2,10 +2,9 @@
 #include "layers/layers.h"
 #include "renderer.h"
 
-static bool shouldClose = false;
-
-void onWindowClose(void* data) {
-    shouldClose = true;
+void onWindowClose(void* data, void* shouldClosePtr) {
+    bool* shouldClose = (bool*)shouldClosePtr;
+    *shouldClose = true;
 }
 
 int main() {
@@ -13,9 +12,10 @@ int main() {
     layers_init();
     INFO("Initialised layers");
 
+    bool shouldClose = false;
     event_listener* listener = event_listener_create();
     listener->windowClose = onWindowClose;
-    event_bus_listen(*(event_listener_generic*)listener);
+    event_bus_listen(*(event_listener_generic*)listener, &shouldClose);
 
     i32 width, height;
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &width, &height);
