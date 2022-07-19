@@ -22,6 +22,7 @@ jobs:
              cmake -D CMAKE_BUILD_TYPE=Release .. &&
              cmake --build . --config Release &&
              mkdir dist && cd dist &&
+             cp ../../imgui.ini . &&
              cp ../Release/arbiter.exe . &&
              cp ../Release/arbiter.exp . &&
              cp ../Release/arbiter.lib . &&
