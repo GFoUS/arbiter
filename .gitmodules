@@ -1,3 +1,6 @@
 [submodule "vendor/glTF-Sample-Models"]
 	path = vendor/glTF-Sample-Models
 	url = https://github.com/KhronosGroup/glTF-Sample-Models
+[submodule "vendor/cimguizmo"]
+	path = vendor/cimguizmo
+	url = https://github.com/cimgui/cimguizmo

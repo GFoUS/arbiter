@@ -2,7 +2,6 @@
 
 #include "core/core.h"
 #include "cglm/cglm.h"
-#include "core/arbiter/event.h"
 #include "element.h"
 
 typedef struct ui_viewport_t ui_viewport;
@@ -10,8 +9,6 @@ typedef struct ui_viewport_t ui_viewport;
 typedef struct {
     ui_element element;
     ui_viewport* viewport;
-
-    arbiter_event_listener* listener;
 
     vec3 centre;
     float fovy;

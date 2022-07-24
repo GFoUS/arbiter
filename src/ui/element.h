@@ -8,7 +8,8 @@ typedef enum {
     UI_ELEMENT_MENU_BAR,
     UI_ELEMENT_WORLD_HIERARCHY,
     UI_ELEMENT_PROPERTIES,
-    UI_ELEMENT_CAMERA
+    UI_ELEMENT_CAMERA,
+    UI_ELEMENT_GUIZMO
 } ui_element_type;
 
 typedef struct ui_element {

@@ -12,9 +12,18 @@ file(GLOB SRC
     "src/*.c"
 )
 
-include_directories(src)
+file(GLOB IMGUIZMO_SRC
+    "vendor/cimguizmo/ImGuizmo/*.cpp"
+)
+
+include_directories(
+    src
+    "vendor/cimguizmo"
+)
 
 add_executable(arbiter 
     ${SRC}
+    ${IMGUIZMO_SRC}
+    "vendor/cimguizmo/cimguizmo.cpp"
 )
 target_link_libraries(arbiter aether)

@@ -5,6 +5,7 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include "cimguizmo.h"
 
 void ui_viewport_resize(ui_viewport* viewport, ImVec2 size) {
     ImVec2 min = {.x = 1.0f, .y = 1.0f};
@@ -30,6 +31,10 @@ void ui_viewport_resize(ui_viewport* viewport, ImVec2 size) {
     writeInfo.pImageInfo = &imageInfo;
 
     vkUpdateDescriptorSets(viewport->ctx->device->device, 1, &writeInfo, 0, NULL);
+
+    ImVec2 pos;
+    igGetWindowPos(&pos);
+    ImGuizmo_SetRect(pos.x, pos.y, clampedSize.x, clampedSize.y);
 }
 
 void ui_viewport_render(ui_element* viewportElement, void(*body)(ui_element*)) {

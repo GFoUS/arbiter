@@ -6,6 +6,8 @@
 #include "cimgui.h"
 #include "cimgui_impl.h"
 
+#include "cimguizmo.h"
+
 #include "font.h"
 
 ui_editor* ui_editor_create(vulkan_context* ctx) {
@@ -36,6 +38,7 @@ void ui_editor_render(ui_editor* editor) {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     igNewFrame();
+    ImGuizmo_BeginFrame();
 
     ImGuiIO* io = igGetIO();
     igPushFont(io->Fonts->Fonts.Data[FONT_WEIGHT_MEDIUM]);

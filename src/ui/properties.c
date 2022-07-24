@@ -200,7 +200,10 @@ void ui_properties_render(ui_element* propertiesElement, void(*body)(ui_element*
                 if (project->assets[i].type == ASSET_TYPE_MODEL) {
                     if (igButton(project->assets[i].path, assetButtonSize)) {
                         ecs_component_model* model = (ecs_component_model*)ecs_entity_get_component(properties->selectedEntity, COMPONENT_TYPE_MODEL);
+
                         model->asset = &project->assets[i];
+                        
+
                         properties->inAssetSelection = false;
                     }
                 }

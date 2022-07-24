@@ -4,6 +4,7 @@
 #include "cimgui.h"
 
 #include "project/ecs/ecs.h"
+#include "core/arbiter/event.h"
 
 #include "viewport.h"
 
@@ -28,7 +29,7 @@ void ui_camera_get_eye(ui_camera* camera, vec3 eye) {
 }
 
 void ui_camera_make_matrices(ui_camera* camera) {
-    vec3 up = {0.0f, -1.0f, 0.0f};
+    vec3 up = {0.0f, 1.0f, 0.0f};
     vec3 eye; ui_camera_get_eye(camera, eye);
     glm_lookat(eye, camera->centre, up, camera->view);
     glm_perspective(camera->fovy, (float)camera->viewport->sceneImage->width / (float)camera->viewport->sceneImage->height, camera->near, camera->far, camera->proj);
@@ -48,7 +49,7 @@ void ui_camera_render(ui_element* cameraElement, void(*body)(ui_element*)) {
                 vec2 mouseDelta;
                 glm_vec2_sub((float*)&imDelta, prevMouseDelta, mouseDelta);
                 
-                vec3 pan = {mouseDelta[1] / PAN_SENSITIVITY, 0.0f, mouseDelta[0] / PAN_SENSITIVITY};
+                vec3 pan = {-mouseDelta[1] / PAN_SENSITIVITY, 0.0f, -mouseDelta[0] / PAN_SENSITIVITY};
 
                 vec3 angles = {0.0f, camera->yaw, camera->pitch};
                 mat4 rotation;
@@ -76,8 +77,8 @@ void ui_camera_render(ui_element* cameraElement, void(*body)(ui_element*)) {
                 vec2 mouseDelta;
                 glm_vec2_sub((float*)&imDelta, prevMouseDelta, mouseDelta);
 
-                camera->yaw   += mouseDelta[0] / ORBIT_SENSITIVITY;
-                camera->pitch -= mouseDelta[1] / ORBIT_SENSITIVITY;
+                camera->yaw   -= mouseDelta[0] / ORBIT_SENSITIVITY;
+                camera->pitch += mouseDelta[1] / ORBIT_SENSITIVITY;
                 ui_camera_make_matrices(camera);
             }
 
