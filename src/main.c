@@ -1,6 +1,7 @@
 #include "aether.h"
 #include "layers/layers.h"
 #include "renderer.h"
+#include "project/ecs/ecs.h"
 
 void onWindowClose(void* data, void* shouldClosePtr) {
     bool* shouldClose = (bool*)shouldClosePtr;
@@ -30,6 +31,7 @@ int main() {
 
     while (!shouldClose) {
         renderer_render(renderer);
+        ecs_world_update();
         window_poll(window);
     }
 
