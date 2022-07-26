@@ -10,7 +10,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Clone aether
-        run: cd .. && git clone --recursive https://github.com/gfous/aether
+        run: cd .. && git clone --recursive https://github.com/gfous/aether &&
+      - name: Clone submodules
+        run: git submodule update --init
       - name: Prepare Vulkan SDK
         uses: humbletim/setup-vulkan-sdk@v1.2.0
         with:

@@ -31,6 +31,8 @@ typedef struct {
 #define GREEN500 (color_color){ 34,  197, 94,  255 }
 #define GREEN600 (color_color){ 22,  163, 74,  255 }
 
+#define TEAL500  (color_color){ 20,  184, 166, 255 }
+
 #define BLUE400  (color_color){ 96,  165, 250, 255 }
 #define BLUE500  (color_color){ 59,  130, 246, 255 }
 #define BLUE600  (color_color){ 37,  99,  235, 255 }

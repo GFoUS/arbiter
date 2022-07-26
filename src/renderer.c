@@ -29,7 +29,7 @@ void renderer_init_imgui(renderer_renderer* renderer) {
 	// Buttons
 	colors[ImGuiCol_Button] = color_to_imvec4(STONE800);
 	colors[ImGuiCol_ButtonHovered] = color_to_imvec4(STONE700);
-	colors[ImGuiCol_ButtonActive] = color_to_imvec4(STONE900);
+	colors[ImGuiCol_ButtonActive] = color_to_imvec4(TEAL500);
 
 	// Frame BG
 	colors[ImGuiCol_FrameBg] = color_to_imvec4(STONE800);
@@ -39,13 +39,13 @@ void renderer_init_imgui(renderer_renderer* renderer) {
 	// Tabs
 	colors[ImGuiCol_Tab] = color_to_imvec4(STONE800);
 	colors[ImGuiCol_TabHovered] = color_to_imvec4(STONE700);
-	colors[ImGuiCol_TabActive] = color_to_imvec4(STONE900);
+	colors[ImGuiCol_TabActive] = color_to_imvec4(TEAL500);
 	colors[ImGuiCol_TabUnfocused] = color_to_imvec4(STONE800);
 	colors[ImGuiCol_TabUnfocusedActive] = color_to_imvec4(STONE900);
 
 	// Title
 	colors[ImGuiCol_TitleBg] = color_to_imvec4(STONE800);
-	colors[ImGuiCol_TitleBgActive] = color_to_imvec4(STONE800);
+	colors[ImGuiCol_TitleBgActive] = color_to_imvec4(STONE900);
 	colors[ImGuiCol_TitleBgCollapsed] = color_to_imvec4(STONE800);
 
     colors[ImGuiCol_MenuBarBg] = color_to_imvec4(STONE900);
